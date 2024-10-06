@@ -7,6 +7,7 @@ public class Assembler {
     private static int currentAddress = 0;
 
     static {
+        // Define the opcodes
         opcodes.put("add", "000");
         opcodes.put("nand", "001");
         opcodes.put("lw", "010");
@@ -114,7 +115,7 @@ public class Assembler {
                         case "sw":
                             regA = Integer.parseInt(parts[1]);
                             regB = Integer.parseInt(parts[2]);
-                            int offsetField = 0;  // Initialize offsetField to avoid uninitialized variable error
+                            int offsetField = 0;
 
                             if (isNumeric(parts[3])) {
                                 offsetField = Integer.parseInt(parts[3]);
@@ -125,7 +126,6 @@ public class Assembler {
                                 System.exit(1);
                             }
 
-                            // Check offsetField fits within 16-bit range
                             if (offsetField < -32768 || offsetField > 32767) {
                                 System.err.println("Error: Offset field out of range (-32768 to 32767): " + offsetField);
                                 System.exit(1);
@@ -137,19 +137,17 @@ public class Assembler {
                         case "beq":
                             regA = Integer.parseInt(parts[1]);
                             regB = Integer.parseInt(parts[2]);
-                            int offset = 0;  // Initialize offset to avoid uninitialized variable error
+                            int offset = 0;
 
                             if (isNumeric(parts[3])) {
                                 offset = Integer.parseInt(parts[3]);
                             } else if (symbolTable.containsKey(parts[3])) {
-                                // Adjust the offset calculation to be relative to the next instruction
                                 offset = symbolTable.get(parts[3]) - (currentAddress + 1);
                             } else {
                                 System.err.println("Error: Undefined label: " + parts[3]);
                                 System.exit(1);
                             }
 
-                            // Check offset fits within 16-bit range
                             if (offset < -32768 || offset > 32767) {
                                 System.err.println("Error: Offset out of range (-32768 to 32767): " + offset);
                                 System.exit(1);
@@ -166,7 +164,6 @@ public class Assembler {
 
                         case "halt":
                         case "noop":
-                            // No additional processing needed for these
                             break;
 
                         default:
@@ -174,7 +171,7 @@ public class Assembler {
                             System.exit(1);
                     }
                 } else if (instruction.equals(".fill")) {
-                    int machineCodeValue = 0;  // Initialize to avoid uninitialized variable error
+                    int machineCodeValue = 0;
                     if (isNumeric(parts[1])) {
                         machineCodeValue = Integer.parseInt(parts[1]);
                     } else if (symbolTable.containsKey(parts[1])) {
@@ -186,7 +183,6 @@ public class Assembler {
                     machineCode = machineCodeValue;
                 }
 
-                // Output the machine code in decimal format
                 System.out.println(machineCode);
                 currentAddress++;
 
@@ -197,7 +193,6 @@ public class Assembler {
         }
     }
 
-    // Utility function to check if a string is numeric
     private static boolean isNumeric(String str) {
         return str.matches("-?\\d+");
     }
