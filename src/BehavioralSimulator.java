@@ -8,18 +8,17 @@ public class BehavioralSimulator {
     private static int[] registers = new int[NUM_REGISTERS];
     private static int[] memory = new int[MEMORY_SIZE];
     private static int programCounter = 0;
+    private static int instructionCount = 0; // Counter for executed instructions
 
     static class State {
         int pc;
         int[] mem;
         int[] reg;
-        int numMemory;
 
         State(int memorySize, int numRegisters) {
             this.pc = 0;
             this.mem = new int[memorySize];
             this.reg = new int[numRegisters];
-            this.numMemory = 0;
         }
     }
 
@@ -80,29 +79,33 @@ public class BehavioralSimulator {
             switch (opcode) {
                 case 0:  // add (R-type)
                     executeAdd(instruction);
+                    instructionCount++; // Increment count after executing add
                     break;
                 case 1:  // nand (R-type)
                     executeNand(instruction);
+                    instructionCount++;
                     break;
                 case 2:  // lw (I-type)
                     executeLw(instruction);
+                    instructionCount++;
                     break;
                 case 3:  // sw (I-type)
                     executeSw(instruction);
+                    instructionCount++;
                     break;
                 case 4:  // beq (I-type)
                     executeBeq(instruction);
+                    instructionCount++;
                     break;
                 case 5:  // jalr (J-type)
                     executeJalr(instruction);
+                    instructionCount++;
                     break;
                 case 6:  // halt (O-type)
                     halted = true;
-                    // Ensure the PC is incremented before halting
-                    programCounter++;
-                    break;
+                    break; // Do not increment instructionCount for halt
                 case 7:  // noop (O-type)
-                    // Do nothing
+                    instructionCount++; // Increment count for noop
                     break;
                 default:
                     System.err.println("Error: Invalid opcode: " + opcode);
@@ -110,14 +113,17 @@ public class BehavioralSimulator {
             }
 
             // Increment the program counter unless halted
-            if (!halted) {
-                programCounter++;
-            }
+            programCounter++;
         }
 
         // Print the final state after halting
         printState();
-        System.out.println("Machine halted.");
+        System.out.println("Machine halted");
+        System.out.printf("Total of %d instructions executed\n", instructionCount);
+        System.out.println("Final state of machine:");
+
+        // Print final state
+        printState();
     }
 
     // R-type instruction: add
