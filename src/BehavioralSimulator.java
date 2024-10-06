@@ -73,6 +73,8 @@ public class BehavioralSimulator {
                     break;
                 case 6:  // halt (O-type)
                     halted = true;
+                    // Ensure the PC is incremented before halting
+                    programCounter++;
                     break;
                 case 7:  // noop (O-type)
                     // Do nothing
@@ -92,6 +94,7 @@ public class BehavioralSimulator {
         printState();
         System.out.println("Machine halted.");
     }
+
 
     // R-type instruction: add
     private static void executeAdd(int instruction) {
@@ -159,13 +162,17 @@ public class BehavioralSimulator {
 
     // Print the current state of the machine (PC, registers, memory)
     private static void printState() {
-        System.out.println("PC: " + programCounter);
-        System.out.println("Registers: " + Arrays.toString(registers));
-
-        System.out.println("Memory:");
+        System.out.println("@@@");
+        System.out.println("state:");
+        System.out.println("\tpc " + programCounter);
+        System.out.println("\tmemory:");
         for (int i = 0; i <= 9; i++) {
-            System.out.println("Address " + i + ": " + memory[i]);
+            System.out.println("\t\tmem[ " + i + " ] " + memory[i]);
         }
-        System.out.println("-----");
+        System.out.println("\tregisters:");
+        for (int i = 0; i < NUM_REGISTERS; i++) {
+            System.out.println("\t\treg[ " + i + " ] " + registers[i]);
+        }
+        System.out.println("end state");
     }
 }
