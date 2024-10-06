@@ -5,8 +5,10 @@ public class Assembler {
     private static final Map<String, String> opcodes = new HashMap<>();
     private static final Map<String, Integer> symbolTable = new HashMap<>();
     private static int currentAddress = 0;
+    private static final String outputFileName = "src/machine_code.txt";
 
     static {
+        // Define the opcodes
         opcodes.put("add", "000");
         opcodes.put("nand", "001");
         opcodes.put("lw", "010");
@@ -24,7 +26,7 @@ public class Assembler {
         // First pass to populate the symbol table
         firstPass(assemblyCode);
 
-        // Second pass to generate machine code
+        // Second pass to generate machine code and write it to a file
         secondPass(assemblyCode);
 
         // Exit successfully if no errors
@@ -78,126 +80,126 @@ public class Assembler {
         }
     }
 
-    // Second pass: Generate machine code and check for errors
+    // Second pass: Generate machine code and write to file
     private static void secondPass(List<String> assemblyCode) {
         currentAddress = 0;
 
-        for (String line : assemblyCode) {
-            String[] parts = line.split("\\s+");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName))) {
+            for (String line : assemblyCode) {
+                String[] parts = line.split("\\s+");
 
-            // Skip label if present
-            if (!opcodes.containsKey(parts[0]) && !parts[0].equals(".fill")) {
-                parts = Arrays.copyOfRange(parts, 1, parts.length);
-            }
-
-            // Skip empty lines
-            if (parts.length == 0) continue;
-
-            String instruction = parts[0];
-            int machineCode = 0;
-
-            try {
-                if (opcodes.containsKey(instruction)) {
-                    int opcode = Integer.parseInt(opcodes.get(instruction), 2);
-                    machineCode = opcode << 22;
-
-                    switch (instruction) {
-                        case "add":
-                        case "nand":
-                            int regA = Integer.parseInt(parts[1]);
-                            int regB = Integer.parseInt(parts[2]);
-                            int destReg = Integer.parseInt(parts[3]);
-                            machineCode |= (regA << 19) | (regB << 16) | destReg;
-                            break;
-
-                        case "lw":
-                        case "sw":
-                            regA = Integer.parseInt(parts[1]);
-                            regB = Integer.parseInt(parts[2]);
-                            int offsetField = 0;  // Initialize offsetField to avoid uninitialized variable error
-
-                            if (isNumeric(parts[3])) {
-                                offsetField = Integer.parseInt(parts[3]);
-                            } else if (symbolTable.containsKey(parts[3])) {
-                                offsetField = symbolTable.get(parts[3]);
-                            } else {
-                                System.err.println("Error: Undefined label: " + parts[3]);
-                                System.exit(1);
-                            }
-
-                            // Check offsetField fits within 16-bit range
-                            if (offsetField < -32768 || offsetField > 32767) {
-                                System.err.println("Error: Offset field out of range (-32768 to 32767): " + offsetField);
-                                System.exit(1);
-                            }
-
-                            machineCode |= (regA << 19) | (regB << 16) | (offsetField & 0xFFFF);
-                            break;
-
-                        case "beq":
-                            regA = Integer.parseInt(parts[1]);
-                            regB = Integer.parseInt(parts[2]);
-                            int offset = 0;  // Initialize offset to avoid uninitialized variable error
-
-                            if (isNumeric(parts[3])) {
-                                offset = Integer.parseInt(parts[3]);
-                            } else if (symbolTable.containsKey(parts[3])) {
-                                // Adjust the offset calculation to be relative to the next instruction
-                                offset = symbolTable.get(parts[3]) - (currentAddress + 1);
-                            } else {
-                                System.err.println("Error: Undefined label: " + parts[3]);
-                                System.exit(1);
-                            }
-
-                            // Check offset fits within 16-bit range
-                            if (offset < -32768 || offset > 32767) {
-                                System.err.println("Error: Offset out of range (-32768 to 32767): " + offset);
-                                System.exit(1);
-                            }
-
-                            machineCode |= (regA << 19) | (regB << 16) | (offset & 0xFFFF);
-                            break;
-
-                        case "jalr":
-                            regA = Integer.parseInt(parts[1]);
-                            regB = Integer.parseInt(parts[2]);
-                            machineCode |= (regA << 19) | (regB << 16);
-                            break;
-
-                        case "halt":
-                        case "noop":
-                            // No additional processing needed for these
-                            break;
-
-                        default:
-                            System.err.println("Error: Invalid opcode: " + instruction);
-                            System.exit(1);
-                    }
-                } else if (instruction.equals(".fill")) {
-                    int machineCodeValue = 0;  // Initialize to avoid uninitialized variable error
-                    if (isNumeric(parts[1])) {
-                        machineCodeValue = Integer.parseInt(parts[1]);
-                    } else if (symbolTable.containsKey(parts[1])) {
-                        machineCodeValue = symbolTable.get(parts[1]);
-                    } else {
-                        System.err.println("Error: Undefined label in .fill: " + parts[1]);
-                        System.exit(1);
-                    }
-                    machineCode = machineCodeValue;
+                // Skip label if present
+                if (!opcodes.containsKey(parts[0]) && !parts[0].equals(".fill")) {
+                    parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
 
-                // Output the machine code in decimal format
-                System.out.println(machineCode);
-                currentAddress++;
+                // Skip empty lines
+                if (parts.length == 0) continue;
 
-            } catch (Exception e) {
-                System.err.println("Error at line " + currentAddress + ": " + e.getMessage());
-                System.exit(1);
+                String instruction = parts[0];
+                int machineCode = 0;
+
+                try {
+                    if (opcodes.containsKey(instruction)) {
+                        int opcode = Integer.parseInt(opcodes.get(instruction), 2);
+                        machineCode = opcode << 22;
+
+                        switch (instruction) {
+                            case "add":
+                            case "nand":
+                                int regA = Integer.parseInt(parts[1]);
+                                int regB = Integer.parseInt(parts[2]);
+                                int destReg = Integer.parseInt(parts[3]);
+                                machineCode |= (regA << 19) | (regB << 16) | destReg;
+                                break;
+
+                            case "lw":
+                            case "sw":
+                                regA = Integer.parseInt(parts[1]);
+                                regB = Integer.parseInt(parts[2]);
+                                int offsetField = 0;
+
+                                if (isNumeric(parts[3])) {
+                                    offsetField = Integer.parseInt(parts[3]);
+                                } else if (symbolTable.containsKey(parts[3])) {
+                                    offsetField = symbolTable.get(parts[3]);
+                                } else {
+                                    System.err.println("Error: Undefined label: " + parts[3]);
+                                    System.exit(1);
+                                }
+
+                                if (offsetField < -32768 || offsetField > 32767) {
+                                    System.err.println("Error: Offset field out of range (-32768 to 32767): " + offsetField);
+                                    System.exit(1);
+                                }
+
+                                machineCode |= (regA << 19) | (regB << 16) | (offsetField & 0xFFFF);
+                                break;
+
+                            case "beq":
+                                regA = Integer.parseInt(parts[1]);
+                                regB = Integer.parseInt(parts[2]);
+                                int offset = 0;
+
+                                if (isNumeric(parts[3])) {
+                                    offset = Integer.parseInt(parts[3]);
+                                } else if (symbolTable.containsKey(parts[3])) {
+                                    offset = symbolTable.get(parts[3]) - (currentAddress + 1);
+                                } else {
+                                    System.err.println("Error: Undefined label: " + parts[3]);
+                                    System.exit(1);
+                                }
+
+                                if (offset < -32768 || offset > 32767) {
+                                    System.err.println("Error: Offset out of range (-32768 to 32767): " + offset);
+                                    System.exit(1);
+                                }
+
+                                machineCode |= (regA << 19) | (regB << 16) | (offset & 0xFFFF);
+                                break;
+
+                            case "jalr":
+                                regA = Integer.parseInt(parts[1]);
+                                regB = Integer.parseInt(parts[2]);
+                                machineCode |= (regA << 19) | (regB << 16);
+                                break;
+
+                            case "halt":
+                            case "noop":
+                                break;
+
+                            default:
+                                System.err.println("Error: Invalid opcode: " + instruction);
+                                System.exit(1);
+                        }
+                    } else if (instruction.equals(".fill")) {
+                        int machineCodeValue = 0;
+                        if (isNumeric(parts[1])) {
+                            machineCodeValue = Integer.parseInt(parts[1]);
+                        } else if (symbolTable.containsKey(parts[1])) {
+                            machineCodeValue = symbolTable.get(parts[1]);
+                        } else {
+                            System.err.println("Error: Undefined label in .fill: " + parts[1]);
+                            System.exit(1);
+                        }
+                        machineCode = machineCodeValue;
+                    }
+
+                    writer.write(Integer.toString(machineCode));
+                    writer.newLine();
+                    currentAddress++;
+
+                } catch (Exception e) {
+                    System.err.println("Error at line " + currentAddress + ": " + e.getMessage());
+                    System.exit(1);
+                }
             }
+        } catch (IOException e) {
+            System.err.println("Error writing to file: " + e.getMessage());
+            System.exit(1);
         }
     }
 
-    // Utility function to check if a string is numeric
     private static boolean isNumeric(String str) {
         return str.matches("-?\\d+");
     }

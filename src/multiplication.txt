@@ -1,0 +1,27 @@
+lw      0   1   mcand     # โหลด multiplicand ไปยัง register 1
+lw      0   2   mplier    # โหลด multiplier ไปยัง register 2
+lw      0   3   zero      # โหลดค่า 0 ไปยัง register 3 เพื่อใช้เก็บผลลัพธ์
+lw      0   4   one       # โหลดค่า 1 ไปยัง register 4
+lw      0   5   count     # โหลด 32 ไปยัง register 5 เพื่อใช้เป็นตัวนับ
+
+loop:
+    beq     2   0   done     # ถ้า multiplier เป็น 0 ให้หยุด
+    and     6   2   4       # ตรวจสอบบิตขวาสุดของ multiplier (bit 0)
+    beq     6   0   skip    # ถ้าบิตขวาสุดเป็น 0 ข้ามการบวก
+    add     3   1   3       # ถ้าบิตขวาสุดเป็น 1 บวก multiplicand กับผลลัพธ์ใน register 3
+
+skip:
+    sll     1   1   1       # เลื่อนซ้าย multiplicand ไป 1 บิต
+    srl     2   2   1       # เลื่อนขวา multiplier ไป 1 บิต
+    addi    5   5   -1      # ลดค่าตัวนับลง
+    beq     5   0   done    # ถ้าตัวนับถึง 0 ให้หยุด
+    beq     0   0   loop    # ทำซ้ำ
+
+done:
+    halt                   # หยุดการทำงาน
+
+mcand   .fill   32766      # ตัวเลข multiplicand
+mplier  .fill   10383      # ตัวเลข multiplier
+zero    .fill   0          # ค่า 0
+one     .fill   1          # ค่า 1
+count   .fill   32         # ตัวนับ 32 รอบ
