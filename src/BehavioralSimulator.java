@@ -9,6 +9,20 @@ public class BehavioralSimulator {
     private static int[] memory = new int[MEMORY_SIZE];
     private static int programCounter = 0;
 
+    static class State {
+        int pc;
+        int[] mem;
+        int[] reg;
+        int numMemory;
+
+        State(int memorySize, int numRegisters) {
+            this.pc = 0;
+            this.mem = new int[memorySize];
+            this.reg = new int[numRegisters];
+            this.numMemory = 0;
+        }
+    }
+
     public static void main(String[] args) {
         // Initialize registers and memory
         Arrays.fill(registers, 0);  // Set all registers to 0
@@ -16,6 +30,9 @@ public class BehavioralSimulator {
 
         // Load machine code from file into memory
         loadMachineCode("src/machine_code.txt");
+
+        // Print example run header
+        printRunHeader();
 
         // Simulate the machine code until halt
         simulate();
@@ -35,6 +52,14 @@ public class BehavioralSimulator {
             System.err.println("Error loading machine code: " + e.getMessage());
             System.exit(1);
         }
+    }
+
+    // Method to print example run header
+    private static void printRunHeader() {
+        for (int i = 0; i < 10; i++) {
+            System.out.printf("memory[%d]=%d\n", i, memory[i]);
+        }
+        System.out.println(); // Add a newline for better formatting
     }
 
     // Simulate the execution of machine code instructions
@@ -73,6 +98,8 @@ public class BehavioralSimulator {
                     break;
                 case 6:  // halt (O-type)
                     halted = true;
+                    // Ensure the PC is incremented before halting
+                    programCounter++;
                     break;
                 case 7:  // noop (O-type)
                     // Do nothing
@@ -157,15 +184,27 @@ public class BehavioralSimulator {
         return num;
     }
 
-    // Print the current state of the machine (PC, registers, memory)
     private static void printState() {
-        System.out.println("PC: " + programCounter);
-        System.out.println("Registers: " + Arrays.toString(registers));
+        State state = new State(MEMORY_SIZE, NUM_REGISTERS);
+        state.pc = programCounter;
 
-        System.out.println("Memory:");
-        for (int i = 0; i <= 9; i++) {
-            System.out.println("Address " + i + ": " + memory[i]);
+        System.arraycopy(memory, 0, state.mem, 0, MEMORY_SIZE);
+        System.arraycopy(registers, 0, state.reg, 0, NUM_REGISTERS);
+
+        System.out.println("\n@@@");
+        System.out.println("state:");
+        System.out.printf("\tpc %d\n", state.pc);
+        System.out.println("\tmemory:");
+
+        // Print all memory contents
+        for (int i = 0; i < 10; i++) {
+            System.out.printf("\t\tmem[ %d ] %d\n", i, state.mem[i]);
         }
-        System.out.println("-----");
+
+        System.out.println("\tregisters:");
+        for (int i = 0; i < NUM_REGISTERS; i++) {
+            System.out.printf("\t\treg[ %d ] %d\n", i, state.reg[i]);
+        }
+        System.out.println("end state");
     }
 }
