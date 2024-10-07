@@ -1,26 +1,26 @@
-lw      0   1   n        # โหลดค่า n จาก memory
-lw      0   2   r        # โหลดค่า r จาก memory
+# ฟังก์ชันคำนวณ C(n, r)
+# n จะอยู่ในรีจิสเตอร์ 0 และ r จะอยู่ในรีจิสเตอร์ 1
+# ผลลัพธ์จะถูกเก็บในรีจิสเตอร์ 3
 
-beq     2   0   base_case    # ถ้า r == 0 ให้เข้าสู่กรณีฐาน
-beq     1   2   base_case    # ถ้า n == r ให้เข้าสู่กรณีฐาน
+combination beq 1 0 base_case  # ถ้า r == 0 ให้ไปที่ base_case
+             beq 0 0 base_case_1  # ถ้า n == r ให้ไปที่ base_case_1
 
-# call combination(n-1, r)
-addi    1   1   -1       # ลดค่า n ลง 1
-jalr    3   7            # เรียกฟังก์ชัน combination(n-1, r)
+             # กรณีรีเคอร์ซีฟ
+             add 0 1 2          # r = r - 1
+             jalr 0 1 combination # C(n, r-1)
 
-# call combination(n-1, r-1)
-addi    2   2   -1       # ลดค่า r ลง 1
-jalr    3   7            # เรียกฟังก์ชัน combination(n-1, r-1)
+             lw 0 0 3           # เก็บ C(n, r-1) ลงในรีจิสเตอร์ 3
+             add 0 0 1          # ลด n ลง 1
+             jalr 0 1 combination # C(n-1, r)
 
-add     3   3   3        # บวกผลลัพธ์ทั้งสองฟังก์ชัน
+             add 0 3 3          # เพิ่ม C(n-1, r) ลงในผลลัพธ์
 
-beq     0   0   end      # จบโปรแกรม
+             jalr 0 0 return     # คืนค่าไปที่ผู้เรียก
 
-base_case:
-    addi    3   0   1    # ถ้าอยู่ในกรณีฐาน ให้คืนค่า 1
+base_case   add 0 0 3          # C(n, 0) = 1
+             jalr 0 0 return     # คืนค่าไปที่ผู้เรียก
 
-end:
-    halt
+base_case_1 add 0 0 3          # C(n, n) = 1
+             jalr 0 0 return     # คืนค่าไปที่ผู้เรียก
 
-n   .fill   7            # ค่า n
-r   .fill   3            # ค่า r
+return      halt                 # สิ้นสุดโปรแกรม
