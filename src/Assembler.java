@@ -21,7 +21,7 @@ public class Assembler {
 
     public static void main(String[] args) {
         // Read the assembly code
-        List<String> assemblyCode = readAssemblyFile("src/assembly.txt");
+        List<String> assemblyCode = readAssemblyFile("src/combination.txt");
 
         // First pass to populate the symbol table
         firstPass(assemblyCode);
