@@ -102,7 +102,7 @@ public class BehavioralSimulator {
                     instructionCount++;
                     break;
                 case 6:  // halt (O-type)
-                    instructionCount++;  // Increment instruction count for halt
+                    instructionCount++;
                     halted = true;
                     break;
                 case 7:  // noop (O-type)

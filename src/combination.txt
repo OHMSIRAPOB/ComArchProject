@@ -1,7 +1,46 @@
-# การทดสอบ Combination สำหรับ n = 7, r = 3
-lw     0     1     n          # Load n into register 1
-lw     0     2     r          # Load r into register 2
-jalr   4     3                # Call combination(n, r)
-halt                          # Halt the program
-n      .fill 7
-r      .fill 3
+    lw 0 1 n            //load n into reg1
+    lw 0 2 r            //load r into reg2
+    lw 0 5 sStack       //load base address of stack into reg5
+    lw 0 6 comb         //load comb to reg 6
+    jalr 6 7            //jump to combi and store pc+1 into reg7
+    halt
+combi lw 0 6 rStack     //load rStack to reg6 for reserve stack
+    add 5 6 5           //sp = sp + 4
+    sw 5 0 0            //store 0 into stack
+    sw 5 2 -1           //store r into stack
+    sw 5 1 -2           //store n into stack
+    sw 5 7 -3           //store return address into stack
+    beq 1 2 return      //if n == r then return
+    beq 0 2 return      //if r == 0 then return
+    nand 0 0 6          //set reg 6 to -1
+    add 1 6 1           //n = n - 1
+    add 2 6 2           //r = r - 1
+    lw 0 6 comb         //load comb to reg6
+    jalr 6 7            //jump to combi and store pc+1 into reg7
+    lw 5 2 -1           //load r from stack
+    lw 5 1 -2           //load n from stack
+    nand 0 0 6          //set reg6 to -1
+    add 1 6 1           //n = n - 1
+    lw 0 6 comb         //load comb to reg6
+    jalr 6 7            //jump to combi and store pc+1 into reg7
+    lw 5 7 -3           //load return address from stack
+    lw 0 6 cStack       //load cStack to reg6
+    add 5 6 5           //sp = sp - 4
+    lw 5 4 0            //load ans from stack
+    add 4 3 3           //sum ans from stack to reg 3
+    sw 5 3 0            //store ans into stack
+    jalr 7 0            //jump to return address and store pc+1 into reg7
+return lw 0 6 cStack    //load cStack to reg6
+    add 5 6 5           //sp = sp - 4 clear stack
+    lw 5 3 0            //load ans from stack to reg3
+    lw 0 6 one          //load one to reg6
+    add 3 6 3           //reg3 = reg3 + 1
+    sw 5 3 0            //store new ans from reg 3 into stack
+    jalr 7 0            //jump to return address and store pc+1 into reg7
+n .fill 7
+r .fill 2
+comb .fill combi
+sStack .fill 1000
+one .fill 1
+cStack .fill -4         //use to clear stack
+rStack .fill 4          //uses to store stack
