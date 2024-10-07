@@ -1,7 +1,19 @@
-# การทดสอบ Multiplication สำหรับ 32766 * 10383
-lw     0     1     mcand      # Load multiplicand
-lw     0     2     mplier     # Load multiplier
-jalr   4     3                # Call multiplication
-halt                          # Halt the program
-mcand  .fill 32766
-mplier .fill 10383
+# คูณเลขสองจำนวนและเก็บผลลัพธ์ในรีจิสเตอร์ 1
+# จำนวนแรกเก็บที่ที่อยู่ five และจำนวนที่สองเก็บที่ที่อยู่ three
+lw 0 1 five        # โหลดค่าที่อยู่ 'five' (5) เข้าสู่รีจิสเตอร์ 1
+lw 0 2 three       # โหลดค่าที่อยู่ 'three' (3) เข้าสู่รีจิสเตอร์ 2
+lw 0 3 result      # โหลดที่อยู่ 'result' เข้าสู่รีจิสเตอร์ 3
+
+start add 0 0 4     # รีจิสเตอร์ 4 เก็บค่าผลลัพธ์ เริ่มที่ 0
+beq 2 0 done         # ถ้ารีจิสเตอร์ 2 (จำนวนที่สอง) เป็น 0 ให้ข้ามไป done
+
+loop add 1 4 4      # เพิ่มค่าในรีจิสเตอร์ 1 (จำนวนแรก) เข้าไปในรีจิสเตอร์ 4
+          add 2 2 -1     # ลดค่าในรีจิสเตอร์ 2 (จำนวนที่สอง) ลง 1
+          beq 2 0 done # ถ้ารีจิสเตอร์ 2 เป็น 0 ให้ข้ามไป done
+          beq 0 0 loop # กลับไปที่ loop
+
+done sw 0 4 result   # เก็บผลลัพธ์ในที่อยู่ 'result'
+          halt             # สิ้นสุดโปรแกรม
+five .fill 5      # เก็บค่า 5
+three .fill 3     # เก็บค่า 3
+result .fill 0    # เก็บผลลัพธ์
