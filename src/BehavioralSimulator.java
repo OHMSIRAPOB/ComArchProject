@@ -79,7 +79,7 @@ public class BehavioralSimulator {
             switch (opcode) {
                 case 0:  // add (R-type)
                     executeAdd(instruction);
-                    instructionCount++; // Increment count after executing add
+                    instructionCount++;
                     break;
                 case 1:  // nand (R-type)
                     executeNand(instruction);
@@ -102,10 +102,11 @@ public class BehavioralSimulator {
                     instructionCount++;
                     break;
                 case 6:  // halt (O-type)
+                    instructionCount++;  // Increment instruction count for halt
                     halted = true;
-                    break; // Do not increment instructionCount for halt
+                    break;
                 case 7:  // noop (O-type)
-                    instructionCount++; // Increment count for noop
+                    instructionCount++;  // Increment count for noop
                     break;
                 default:
                     System.err.println("Error: Invalid opcode: " + opcode);
