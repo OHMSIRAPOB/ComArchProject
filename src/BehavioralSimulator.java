@@ -1,216 +1,155 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 public class BehavioralSimulator {
-    private static final int NUM_REGISTERS = 8;
-    private static final int MEMORY_SIZE = 65536;
+    private static final int NUMMEMORY = 65536; // maximum number of words in memory
+    private static final int NUMREGS = 8; // number of machine registers
+    private static final int MAXLINELENGTH = 5000; // for testing default is 1000
 
-    private static int[] registers = new int[NUM_REGISTERS];
-    private static int[] memory = new int[MEMORY_SIZE];
-    private static int programCounter = 0;
-    private static int instructionCount = 0; // Counter for executed instructions
-
-    static class State {
+    public static class stateStruct {
         int pc;
-        int[] mem;
-        int[] reg;
+        int[] mem = new int[NUMMEMORY];
+        int[] reg = new int[NUMREGS];
+        int numMemory;
+    }
 
-        State(int memorySize, int numRegisters) {
-            this.pc = 0;
-            this.mem = new int[memorySize];
-            this.reg = new int[numRegisters];
+    public static void printState(stateStruct state) {
+        System.out.println("\n@@@\nstate:");
+        System.out.println("\tpc " + state.pc);
+        System.out.println("\tmemory:");
+        for (int i = 0; i < state.numMemory; i++) {
+            System.out.println("\t\tmem[ " + i + " ] " + state.mem[i]);
         }
+        System.out.println("\tregisters:");
+        for (int i = 0; i < NUMREGS; i++) {
+            System.out.println("\t\treg[ " + i + " ] " + state.reg[i]);
+        }
+        System.out.println("end state");
     }
 
     public static void main(String[] args) {
-        // Initialize registers and memory
-        Arrays.fill(registers, 0);  // Set all registers to 0
-        Arrays.fill(memory, 0);     // Set all memory to 0
-
-        // Load machine code from file into memory
-        loadMachineCode("src/machine_code.txt");
-
-        // Print example run header
-        printRunHeader();
-
-        // Simulate the machine code until halt
-        simulate();
-    }
-
-    // Load machine code from the file into memory
-    private static void loadMachineCode(String filename) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+        // แทนที่ args[0] ด้วยเส้นทางที่ตรงตามที่คุณต้องการ
+        String fileName = "src/machine_code.txt";
+        stateStruct state = new stateStruct();
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
-            int address = 0;
-
-            while ((line = br.readLine()) != null) {
-                memory[address++] = Integer.parseInt(line.trim());
+            while ((line = reader.readLine()) != null) {
+                state.mem[state.numMemory] = Integer.parseInt(line);
+                System.out.println("memory[" + state.numMemory + "]=" + state.mem[state.numMemory]);
+                state.numMemory++;
             }
-
         } catch (IOException e) {
-            System.err.println("Error loading machine code: " + e.getMessage());
+            System.err.println("error: can't open file " + fileName);
+            e.printStackTrace();
             System.exit(1);
         }
-    }
 
-    // Method to print example run header
-    private static void printRunHeader() {
-        for (int i = 0; i < 10; i++) {
-            System.out.printf("memory[%d]=%d\n", i, memory[i]);
-        }
-        System.out.println(); // Add a newline for better formatting
-    }
+        // ... (โค้ดส่วนที่เหลือไม่มีการเปลี่ยนแปลง) ...
 
-    // Simulate the execution of machine code instructions
-    private static void simulate() {
-        boolean halted = false;
+        state.pc = 0;
+        int regA, regB;
+        int offset = 0;
+        int[] arg = new int[3];
+        int total = 0;
 
-        while (!halted) {
-            // Print the current state before executing the instruction
-            printState();
+        for (int i = 1; i != 0; i++) {
+            total++;
+            printState(state);
+            switch (state.mem[state.pc] >> 22) {
+                case 0: // add
+                    rFormat(state.mem[state.pc], arg);
+                    regA = state.reg[arg[0]];
+                    regB = state.reg[arg[1]];
+                    state.reg[arg[2]] = regA + regB;
+                    break;
 
-            // Fetch the instruction at the program counter
-            int instruction = memory[programCounter];
+                case 1: // nand
+                    rFormat(state.mem[state.pc], arg);
+                    regA = state.reg[arg[0]];
+                    regB = state.reg[arg[1]];
+                    state.reg[arg[2]] = ~(regA & regB);
+                    break;
 
-            // Decode the opcode (bits 24-22)
-            int opcode = (instruction >> 22) & 0x7;
+                case 2: // lw
+                    iFormat(state.mem[state.pc], arg);
+                    offset = arg[2] + state.reg[arg[0]];
+                    state.reg[arg[1]] = state.mem[offset];
+                    break;
 
-            // Execute the instruction based on the opcode
-            switch (opcode) {
-                case 0:  // add (R-type)
-                    executeAdd(instruction);
-                    instructionCount++; // Increment count after executing add
+                case 3: // sw
+                    iFormat(state.mem[state.pc], arg);
+                    offset = arg[2] + state.reg[arg[0]];
+                    state.mem[offset] = state.reg[arg[1]];
                     break;
-                case 1:  // nand (R-type)
-                    executeNand(instruction);
-                    instructionCount++;
+
+                case 4: // beq
+                    iFormat(state.mem[state.pc], arg);
+                    regA = state.reg[arg[0]];
+                    regB = state.reg[arg[1]];
+                    if (regA == regB) {
+                        state.pc += arg[2];
+                    }
                     break;
-                case 2:  // lw (I-type)
-                    executeLw(instruction);
-                    instructionCount++;
+
+                case 5: // jalr
+                    jFormat(state.mem[state.pc], arg);
+                    regA = state.reg[arg[0]];
+                    regB = state.reg[arg[1]];
+                    state.reg[arg[1]] = state.pc + 1; // เก็บ PC+1 ลงใน regB
+                    state.pc = regA; // กระโดดไปยัง address ที่ถูกเก็บไว้ใน regA
+                    state.pc--;
                     break;
-                case 3:  // sw (I-type)
-                    executeSw(instruction);
-                    instructionCount++;
+
+                case 6: // bhalt
+                    oFormat(state.mem[state.pc], arg);
+                    i = -1;
                     break;
-                case 4:  // beq (I-type)
-                    executeBeq(instruction);
-                    instructionCount++;
+
+                case 7: // noop
+                    oFormat(state.mem[state.pc], arg);
                     break;
-                case 5:  // jalr (J-type)
-                    executeJalr(instruction);
-                    instructionCount++;
-                    break;
-                case 6:  // halt (O-type)
-                    halted = true;
-                    break; // Do not increment instructionCount for halt
-                case 7:  // noop (O-type)
-                    instructionCount++; // Increment count for noop
-                    break;
-                default:
-                    System.err.println("Error: Invalid opcode: " + opcode);
-                    System.exit(1);
             }
+            state.pc++;
 
-            // Increment the program counter unless halted
-            programCounter++;
+            if (total > MAXLINELENGTH) {
+                i = -1;
+                System.out.println("reached max length");
+            }
         }
-
-        // Print the final state after halting
-        printState();
-        System.out.println("Machine halted");
-        System.out.printf("Total of %d instructions executed\n", instructionCount);
-        System.out.println("Final state of machine:");
-
-        // Print final state
-        printState();
+        System.out.println("machine halted\n" +
+                "total of " + total + " instructions executed\n" +
+                "final state of machine:");
+        printState(state);
     }
 
-    // R-type instruction: add
-    private static void executeAdd(int instruction) {
-        int regA = (instruction >> 19) & 0x7;
-        int regB = (instruction >> 16) & 0x7;
-        int destReg = instruction & 0x7;
-
-        registers[destReg] = registers[regA] + registers[regB];
+    private static void rFormat(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA
+        arg[1] = (bit & (7 << 16)) >> 16; // regB
+        arg[2] = bit & 7; // destReg
     }
 
-    // R-type instruction: nand
-    private static void executeNand(int instruction) {
-        int regA = (instruction >> 19) & 0x7;
-        int regB = (instruction >> 16) & 0x7;
-        int destReg = instruction & 0x7;
-
-        registers[destReg] = ~(registers[regA] & registers[regB]);
+    private static void iFormat(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA
+        arg[1] = (bit & (7 << 16)) >> 16; // regB
+        arg[2] = bit & 0xFFFF;
+        arg[2] = convertNum(arg[2]);
     }
 
-    // I-type instruction: lw
-    private static void executeLw(int instruction) {
-        int regA = (instruction >> 19) & 0x7;
-        int regB = (instruction >> 16) & 0x7;
-        int offset = convertNum(instruction & 0xFFFF);
-
-        registers[regB] = memory[registers[regA] + offset];
+    private static void jFormat(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA
+        arg[1] = (bit & (7 << 16)) >> 16; // regB
+        arg[2] = bit & 0xFFFF; // destReg
     }
 
-    // I-type instruction: sw
-    private static void executeSw(int instruction) {
-        int regA = (instruction >> 19) & 0x7;
-        int regB = (instruction >> 16) & 0x7;
-        int offset = convertNum(instruction & 0xFFFF);
-
-        memory[registers[regA] + offset] = registers[regB];
+    private static void oFormat(int bit, int[] arg) {
+        arg[0] = bit & 0x3FFFFFF; // regA
     }
 
-    // I-type instruction: beq
-    private static void executeBeq(int instruction) {
-        int regA = (instruction >> 19) & 0x7;
-        int regB = (instruction >> 16) & 0x7;
-        int offset = convertNum(instruction & 0xFFFF);
-
-        if (registers[regA] == registers[regB]) {
-            programCounter += offset;
-        }
-    }
-
-    // J-type instruction: jalr
-    private static void executeJalr(int instruction) {
-        int regA = (instruction >> 19) & 0x7;
-        int regB = (instruction >> 16) & 0x7;
-
-        registers[regB] = programCounter + 1;
-        programCounter = registers[regA] - 1;  // -1 because PC will be incremented after this
-    }
-
-    // Convert a 16-bit number to a 32-bit 2's complement integer
-    private static int convertNum(int num) {
+    public static int convertNum(int num) {
         if ((num & (1 << 15)) != 0) {
             num -= (1 << 16);
         }
         return num;
-    }
-
-    private static void printState() {
-        State state = new State(MEMORY_SIZE, NUM_REGISTERS);
-        state.pc = programCounter;
-
-        System.arraycopy(memory, 0, state.mem, 0, MEMORY_SIZE);
-        System.arraycopy(registers, 0, state.reg, 0, NUM_REGISTERS);
-
-        System.out.println("\n@@@");
-        System.out.println("state:");
-        System.out.printf("\tpc %d\n", state.pc);
-        System.out.println("\tmemory:");
-
-        // Print all memory contents
-        for (int i = 0; i < 10; i++) {
-            System.out.printf("\t\tmem[ %d ] %d\n", i, state.mem[i]);
-        }
-
-        System.out.println("\tregisters:");
-        for (int i = 0; i < NUM_REGISTERS; i++) {
-            System.out.printf("\t\treg[ %d ] %d\n", i, state.reg[i]);
-        }
-        System.out.println("end state");
     }
 }
