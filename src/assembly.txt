@@ -1,10 +1,6 @@
-lw 0 1 five
-lw 1 2 3
-start add 1 2 1
-beq 0 1 2
-beq 0 0 start
-noop
-done halt
-five .fill 5
-neg1 .fill -1
-stAddr .fill start
+lw 0 1 dividend   # Load the value of the dividend (20) into register 1
+        lw 0 2 divisor    # Load the value of the divisor (4) into register 2
+        div 1 2 3         # Divide the value in register 1 by the value in register 2, store result in register 3
+        halt              # Stop execution
+dividend .fill 20         # Define a memory location 'dividend' initialized with the value 20
+divisor  .fill 4          # Define a memory location 'divisor' initialized with the value 4
