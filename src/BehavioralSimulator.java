@@ -30,7 +30,7 @@ public class BehavioralSimulator {
 
     public static void main(String[] args) {
         // แทนที่ args[0] ด้วยเส้นทางที่ตรงตามที่คุณต้องการ
-        String fileName = "src/machine_code.txt";
+            String fileName = "src/machine_code.txt";
         stateStruct state = new stateStruct();
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
