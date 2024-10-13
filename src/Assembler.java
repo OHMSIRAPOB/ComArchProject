@@ -1,15 +1,14 @@
 import java.io.*;
 import java.util.*;
 
-    public class Assembler {
-        // เก็บคู่ข้อมูล opcodes ที่เกี่ยวข้อง
-        private static final Map<String, String> opcodes = new HashMap<>();
-        // เก็บตำแหน่งของ labels ที่ถูกประกาศในโปรแกรม Assembly
-        private static final Map<String, Integer> symbolTable = new HashMap<>();
-        private static int currentAddress = 0;
+public class Assembler {
+    private static final Map<String, String> opcodes = new HashMap<>();
+    private static final Map<String, Integer> symbolTable = new HashMap<>();
+    private static int currentAddress = 0;
     private static final String outputFileName = "src/machine_code.txt";
 
     static {
+        // Define the opcodes
         opcodes.put("add", "000");
         opcodes.put("nand", "001");
         opcodes.put("lw", "010");
@@ -18,35 +17,36 @@ import java.util.*;
         opcodes.put("jalr", "101");
         opcodes.put("halt", "110");
         opcodes.put("noop", "111");
-
         opcodes.put("div","010");
+        opcodes.put("mflo", "011");
+        opcodes.put("mfhi", "100");
     }
 
     public static void main(String[] args) {
-        // อ่านโค้ด Assembly จากไฟล์ และเก็บแต่ละบรรทัดในรูปของ List<String>
-        List<String> assemblyCode = readAssemblyFile("src/combination.txt");
+        // Read the assembly code
+        List<String> assemblyCode = readAssemblyFile("src/div.txt");
 
-        // สร้าง symbol table ที่เก็บตำแหน่งของ labels
-        first(assemblyCode);
+        // First pass to populate the symbol table
+        firstPass(assemblyCode);
 
-        // แปลง Assembly เป็น machine code และเขียนลงไฟล์
-        second(assemblyCode);
+        // Second pass to generate machine code and write it to a file
+        secondPass(assemblyCode);
 
-        // ออกจากโปรแกรมเมื่อเสร็จการทำงาน
+        // Exit successfully if no errors
         System.exit(0);
     }
 
-    // ฟังก์ชันในการอ่านไฟล์
+    // Function to read the assembly file
     private static List<String> readAssemblyFile(String filename) {
-        List<String> lines = new ArrayList<>(); //สร้างลิสต์ lines ที่จะเก็บบรรทัดของโปรแกรม Assembly ที่ถูกอ่านจากไฟล์
+        List<String> lines = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (!line.isEmpty() && !line.startsWith("#")) {
-                    // ลบ คอมเมนต์
+                    // Remove comments
                     int commentIndex = line.indexOf('#');
-                    if (commentIndex != -1) { //ถ้าค่าคอมเมนค์ไม่เท่ากับ -1 แปลว่ามีคอมเมนต์
+                    if (commentIndex != -1) {
                         line = line.substring(0, commentIndex).trim();
                     }
                     lines.add(line);
@@ -59,53 +59,47 @@ import java.util.*;
         return lines;
     }
 
-    // First: เพื่อสร้าง symbol table ที่เก็บตำแหน่ง (address) ของทุกๆ label ที่ถูกใช้ในโปรแกรม และเช็ค labels ที่ซ้ำ
-    private static void first(List<String> assemblyCode) {
+    // First pass: Populate the symbol table and check for duplicate labels
+    private static void firstPass(List<String> assemblyCode) {
         currentAddress = 0;
         for (String line : assemblyCode) {
-            String[] parts = line.split("\\s+"); //แยกบรรทัดออกเป็นส่วนๆใช้ช่องว่างแบ่ง
+            String[] parts = line.split("\\s+");
 
-            // เช็คว่าเริ่มต้นด้วย label ไหม เช็คว่า เป็นคำสั่งassembly กับ .fillบ่
+            // Check if the line starts with a label
             if (!opcodes.containsKey(parts[0]) && !parts[0].equals(".fill")) {
                 String label = parts[0];
                 if (symbolTable.containsKey(label)) {
                     System.err.println("Error: Duplicate label found: " + label);
-                    System.exit(1); //ดูว่าซ้ำบ่
+                    System.exit(1);
                 }
-                symbolTable.put(label, currentAddress);
-                parts = Arrays.copyOfRange(parts, 1, parts.length); //พบ label และบันทึกลงใน symbol table แล้ว โปรแกรมจะต้องลบ label ออกจากคำสั่ง เพื่อไม่ให้คำสั่งถัดไปได้รับผลกระทบ
+                symbolTable.put(label, currentAddress);  // Add label to symbol table
+                parts = Arrays.copyOfRange(parts, 1, parts.length);
             }
 
+            // Skip empty lines after label removal
             if (parts.length == 0) continue;
 
-            currentAddress++;
+            currentAddress++;  // Increment address for each instruction or label
         }
     }
 
-    // Second: แปลงคำสั่ง Assembly เป็น Machine Code
-    private static void second(List<String> assemblyCode) {
+    // Second pass: Generate machine code and write to file
+    private static void secondPass(List<String> assemblyCode) {
         currentAddress = 0;
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName))) {
             for (String line : assemblyCode) {
                 String[] parts = line.split("\\s+");
 
-                // ข้ามถ้ามี label
+                // Skip label if present
                 if (!opcodes.containsKey(parts[0]) && !parts[0].equals(".fill")) {
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
 
-                // บรรทัดว่าง
+                // Skip empty lines
                 if (parts.length == 0) continue;
 
                 String instruction = parts[0];
-
-                // เช็ค opcode ถูกบ่
-                if (!opcodes.containsKey(instruction) && !instruction.equals(".fill")) {
-                    System.err.println("Error: Invalid opcode: " + instruction);
-                    System.exit(1);
-                }
-
                 int machineCode = 0;
 
                 try {
@@ -178,11 +172,17 @@ import java.util.*;
                                 break;
 
                             case "div":
-                               regA = Integer.parseInt(parts[1]);
-                               regB = Integer.parseInt(parts[2]);
-                               int divDestReg = Integer.parseInt(parts[3]);
-                               machineCode |= (regA << 19) | (regB << 16) | divDestReg;
-                               break;
+                                regA = Integer.parseInt(parts[1]);  // รีจิสเตอร์ที่เก็บตัวเลขที่จะหาร
+                                regB = Integer.parseInt(parts[2]);  // รีจิสเตอร์ที่เก็บตัวหาร
+                                machineCode |= (regA << 19) | (regB << 16);  // สร้าง machine code สำหรับ div
+                                // หมายเหตุ: การหารจะส่งผลไปที่ LO โดยอัตโนมัติ
+                                break;
+
+                            case "mflo":  // ย้ายค่าจากรีจิสเตอร์ LO ไปยังรีจิสเตอร์ที่กำหนด
+                                int mfloDestReg = Integer.parseInt(parts[1]);  // รีจิสเตอร์ปลายทาง
+                                machineCode |= (mfloDestReg << 16) | (0x3 << 22);  // 0x3 สำหรับ mflo (อาจจะขึ้นอยู่กับการกำหนดค่า)
+                                break;
+
 
                             default:
                                 System.err.println("Error: Invalid opcode: " + instruction);
