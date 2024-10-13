@@ -70,14 +70,13 @@ import java.util.*;
                     System.err.println("Error: Duplicate label found: " + label);
                     System.exit(1); //ดูว่าซ้ำบ่
                 }
-                symbolTable.put(label, currentAddress);  // Add label to symbol table
+                symbolTable.put(label, currentAddress);
                 parts = Arrays.copyOfRange(parts, 1, parts.length); //พบ label และบันทึกลงใน symbol table แล้ว โปรแกรมจะต้องลบ label ออกจากคำสั่ง เพื่อไม่ให้คำสั่งถัดไปได้รับผลกระทบ
             }
 
-            // Skip empty lines after label removal
             if (parts.length == 0) continue;
 
-            currentAddress++;  // Increment address for each instruction or label
+            currentAddress++;
         }
     }
 
