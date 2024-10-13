@@ -1,0 +1,26 @@
+# ฟังก์ชันคำนวณ C(n, r)
+# n จะอยู่ในรีจิสเตอร์ 0 และ r จะอยู่ในรีจิสเตอร์ 1
+# ผลลัพธ์จะถูกเก็บในรีจิสเตอร์ 3
+
+combination beq 1 0 base_case  # ถ้า r == 0 ให้ไปที่ base_case
+             beq 0 0 base_case_1  # ถ้า n == r ให้ไปที่ base_case_1
+
+             # กรณีรีเคอร์ซีฟ
+             add 0 1 2          # r = r - 1
+             jalr 0 1 combination # C(n, r-1)
+
+             lw 0 0 3           # เก็บ C(n, r-1) ลงในรีจิสเตอร์ 3
+             add 0 0 1          # ลด n ลง 1
+             jalr 0 1 combination # C(n-1, r)
+
+             add 0 3 3          # เพิ่ม C(n-1, r) ลงในผลลัพธ์
+
+             jalr 0 0 return     # คืนค่าไปที่ผู้เรียก
+
+base_case   add 0 0 3          # C(n, 0) = 1
+             jalr 0 0 return     # คืนค่าไปที่ผู้เรียก
+
+base_case_1 add 0 0 3          # C(n, n) = 1
+             jalr 0 0 return     # คืนค่าไปที่ผู้เรียก
+
+return      halt                 # สิ้นสุดโปรแกรม
