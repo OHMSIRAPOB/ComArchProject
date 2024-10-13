@@ -5,13 +5,13 @@ import java.io.IOException;
 public class BehavioralSimulator {
     private static final int NUMMEMORY = 65536; // maximum number ของ words ใน memory
     private static final int NUMREGS = 8; // จำนวน machine registers
-    private static final int MAXLINELENGTH = 1000; // for testing default is 1000
+    private static final int MAXLINELENGTH = 1000; // จำนวน machine registers
 
     public static class stateStruct {
         int pc; // program counter
         int[] mem = new int[NUMMEMORY];
         int[] reg = new int[NUMREGS];
-        int numMemory; // Tracks how many memory locations are in use
+        int numMemory; // นับจำนวน momory ที่ใช้อยู่
     }
 
     public static void printState(stateStruct state) {
