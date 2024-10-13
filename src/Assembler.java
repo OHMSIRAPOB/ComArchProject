@@ -17,13 +17,14 @@ public class Assembler {
         opcodes.put("jalr", "101");
         opcodes.put("halt", "110");
         opcodes.put("noop", "111");
-
         opcodes.put("div","010");
+        opcodes.put("mflo", "011");
+        opcodes.put("mfhi", "100");
     }
 
     public static void main(String[] args) {
         // Read the assembly code
-        List<String> assemblyCode = readAssemblyFile("src/assembly.txt");
+        List<String> assemblyCode = readAssemblyFile("src/div.txt");
 
         // First pass to populate the symbol table
         firstPass(assemblyCode);
@@ -171,11 +172,17 @@ public class Assembler {
                                 break;
 
                             case "div":
-                               regA = Integer.parseInt(parts[1]);
-                               regB = Integer.parseInt(parts[2]);
-                               int divDestReg = Integer.parseInt(parts[3]);
-                               machineCode |= (regA << 19) | (regB << 16) | divDestReg;
-                               break;
+                                regA = Integer.parseInt(parts[1]);  // รีจิสเตอร์ที่เก็บตัวเลขที่จะหาร
+                                regB = Integer.parseInt(parts[2]);  // รีจิสเตอร์ที่เก็บตัวหาร
+                                machineCode |= (regA << 19) | (regB << 16);  // สร้าง machine code สำหรับ div
+                                // หมายเหตุ: การหารจะส่งผลไปที่ LO โดยอัตโนมัติ
+                                break;
+
+                            case "mflo":  // ย้ายค่าจากรีจิสเตอร์ LO ไปยังรีจิสเตอร์ที่กำหนด
+                                int mfloDestReg = Integer.parseInt(parts[1]);  // รีจิสเตอร์ปลายทาง
+                                machineCode |= (mfloDestReg << 16) | (0x3 << 22);  // 0x3 สำหรับ mflo (อาจจะขึ้นอยู่กับการกำหนดค่า)
+                                break;
+
 
                             default:
                                 System.err.println("Error: Invalid opcode: " + instruction);
