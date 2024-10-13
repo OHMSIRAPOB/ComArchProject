@@ -59,33 +59,33 @@ public class BehavioralSimulator {
 
             switch (opcode) {
                 case 0: // add
-                    rFormat(state.mem[state.pc], arg); // rFormat
+                    RType(state.mem[state.pc], arg); // R-Type
                     regA = state.reg[arg[0]];
                     regB = state.reg[arg[1]];
                     state.reg[arg[2]] = regA + regB; // add arg[0] กับ arg[1] เก็บไว้ที่ arg[2]
                     break;
 
                 case 1: // nand
-                    rFormat(state.mem[state.pc], arg); // rFormat
+                    RType(state.mem[state.pc], arg); // R-Type
                     regA = state.reg[arg[0]];
                     regB = state.reg[arg[1]];
                     state.reg[arg[2]] = ~(regA & regB); // nand arg[0] กับ arg[1] เก็บไว้ที่ arg[2]
                     break;
 
                 case 2: // lw
-                    iFormat(state.mem[state.pc], arg); // iFormat
+                    IType(state.mem[state.pc], arg); // I-Type
                     offset = arg[2] + state.reg[arg[0]];
                     state.reg[arg[1]] = state.mem[offset]; // load ค่าจาก memory ไป arg[1]
                     break;
 
                 case 3: // sw
-                    iFormat(state.mem[state.pc], arg); // iFormat
+                    IType(state.mem[state.pc], arg); // I-Type
                     offset = arg[2] + state.reg[arg[0]];
                     state.mem[offset] = state.reg[arg[1]]; // load ค่าจาก register ไป memory
                     break;
 
                 case 4: // beq
-                    iFormat(state.mem[state.pc], arg); // iFormat
+                    IType(state.mem[state.pc], arg); // I-Type
                     regA = state.reg[arg[0]];
                     regB = state.reg[arg[1]];
                     if (regA == regB) {
@@ -94,7 +94,7 @@ public class BehavioralSimulator {
                     break;
 
                 case 5: // jalr
-                    jFormat(state.mem[state.pc], arg); // jFormat
+                    JType(state.mem[state.pc], arg); // J-Type
                     regA = state.reg[arg[0]];
                     regB = state.reg[arg[1]];
                     state.reg[arg[1]] = state.pc + 1; // stores current PC+1 ลงใน regB
@@ -103,12 +103,12 @@ public class BehavioralSimulator {
                     break;
 
                 case 6: // bhalt
-                    oFormat(state.mem[state.pc], arg); // jFormat
+                    OType(state.mem[state.pc], arg); // O-Type
                     i = -1; // หยุด execution program, หยุด loop
                     break;
 
                 case 7: // noop
-                    oFormat(state.mem[state.pc], arg); // no operation
+                    OType(state.mem[state.pc], arg); // no operation
                     break;
             }
             state.pc++;
@@ -124,32 +124,32 @@ public class BehavioralSimulator {
         printState(state);
     }
 
-    private static void rFormat(int bit, int[] arg) {
+    private static void RType(int bit, int[] arg) {
         arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
         arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
         arg[2] = bit & 7; // destReg (Bits 0-2)
     }
 
-    private static void iFormat(int bit, int[] arg) {
+    private static void IType(int bit, int[] arg) {
         arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
         arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
         arg[2] = bit & 0xFFFF; // Offset (Bits 0-15)
-        arg[2] = convertNum(arg[2]); // Convert เป็น signed offset
+        arg[2] = convert(arg[2]); // Convert เป็น signed offset
     }
 
-    private static void jFormat(int bit, int[] arg) {
+    private static void JType(int bit, int[] arg) {
         arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
         arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
         arg[2] = bit & 0xFFFF; // destReg
     }
 
-    private static void oFormat(int bit, int[] arg) {
+    private static void OType(int bit, int[] arg) {
         arg[0] = bit & 0x3FFFFFF; // regA
     }
 
-    public static int convertNum(int num) {
+    public static int convert(int num) {
         if ((num & (1 << 15)) != 0) {
-            num -= (1 << 16);
+            num -= (1 << 16); // Converts เป็น signed number
         }
         return num;
     }
