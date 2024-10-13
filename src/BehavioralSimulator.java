@@ -44,18 +44,18 @@ public class BehavioralSimulator {
     private static void JType(int bit, int[] arg) {
         arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
         arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 0xFFFF; // destReg
+        arg[2] = bit & 0xFFFF; // destReg เอา bit ที่ 0-15
     }
 
     private static void OType(int bit, int[] arg) {
-        arg[0] = bit & 0x3FFFFFF; // regA
+        arg[0] = bit & 0x3FFFFFF; // regA 22 bit แรก 0-21
     }
 
-    public static int convert(int num) {
-        if ((num & (1 << 15)) != 0) {
-            num -= (1 << 16); // Converts เป็น signed number
+    public static int convert(int num) { //Converts เป็น signed number -32768 ถึง 32767
+        if ((num & (1 << 15)) != 0) {//ตรวจสอบว่า bit 15 เป็น 1
+            num -= (1 << 16); // ลบค่า 2^16 (65536) ออกจาก num เพื่อแปลงเป็น signed number
         }
-        return num;
+        return num; //ส่งค่าที่แปลงแล้ว เพื่อคำนวณเลขลบ
     }
 
     public static void main(String[] args) {
@@ -68,7 +68,7 @@ public class BehavioralSimulator {
                 System.out.println("memory[" + state.numMemory + "]=" + state.mem[state.numMemory]);
                 state.numMemory++;
             }
-        } catch (IOException e) {
+        } catch (IOException e) {  //ดักจับ error จากการอ่านไฟล์
             System.err.println("error: can't open file " + fileName);
             e.printStackTrace();
             System.exit(1);
@@ -141,7 +141,6 @@ public class BehavioralSimulator {
                 case 7: // noop
                     OType(state.mem[state.pc], arg); // no operation
                     break;
-
             }
             state.pc++;
 
