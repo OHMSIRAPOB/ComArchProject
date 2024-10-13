@@ -153,5 +153,4 @@ public class BehavioralSimulator {
                 "final state of machine:");
         printState(state);
     }
-
 }
