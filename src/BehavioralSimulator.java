@@ -28,6 +28,36 @@ public class BehavioralSimulator {
         System.out.println("end state");
     }
 
+    private static void RType(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
+        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
+        arg[2] = bit & 7; // destReg (Bits 0-2)
+    }
+
+    private static void IType(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
+        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
+        arg[2] = bit & 0xFFFF; // Offset (Bits 0-15)
+        arg[2] = convert(arg[2]); // Convert เป็น signed offset
+    }
+
+    private static void JType(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
+        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
+        arg[2] = bit & 0xFFFF; // destReg
+    }
+
+    private static void OType(int bit, int[] arg) {
+        arg[0] = bit & 0x3FFFFFF; // regA
+    }
+
+    public static int convert(int num) {
+        if ((num & (1 << 15)) != 0) {
+            num -= (1 << 16); // Converts เป็น signed number
+        }
+        return num;
+    }
+
     public static void main(String[] args) {
         String fileName = "src/machine_code.txt"; // อ่าน machine_code.txt แล้ว store ใน memory array (mem[])
         stateStruct state = new stateStruct();
@@ -137,33 +167,4 @@ public class BehavioralSimulator {
         printState(state);
     }
 
-    private static void RType(int bit, int[] arg) {
-        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
-        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 7; // destReg (Bits 0-2)
-    }
-
-    private static void IType(int bit, int[] arg) {
-        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
-        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 0xFFFF; // Offset (Bits 0-15)
-        arg[2] = convert(arg[2]); // Convert เป็น signed offset
-    }
-
-    private static void JType(int bit, int[] arg) {
-        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
-        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 0xFFFF; // destReg
-    }
-
-    private static void OType(int bit, int[] arg) {
-        arg[0] = bit & 0x3FFFFFF; // regA
-    }
-
-    public static int convert(int num) {
-        if ((num & (1 << 15)) != 0) {
-            num -= (1 << 16); // Converts เป็น signed number
-        }
-        return num;
-    }
 }
