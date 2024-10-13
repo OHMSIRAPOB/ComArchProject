@@ -17,8 +17,6 @@ public class Assembler {
         opcodes.put("jalr", "101");
         opcodes.put("halt", "110");
         opcodes.put("noop", "111");
-        opcodes.put("div","010");
-        opcodes.put("mflo", "011");
     }
 
     public static void main(String[] args) {
