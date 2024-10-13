@@ -1,14 +1,13 @@
 import java.io.*;
 import java.util.*;
 
-public class Assembler {
-    private static final Map<String, String> opcodes = new HashMap<>();
-    private static final Map<String, Integer> symbolTable = new HashMap<>();
-    private static int currentAddress = 0;
+    public class Assembler {
+        private static final Map<String, String> opcodes = new HashMap<>();
+        private static final Map<String, Integer> symbolTable = new HashMap<>();
+        private static int currentAddress = 0;
     private static final String outputFileName = "src/machine_code.txt";
 
     static {
-        // Define the opcodes
         opcodes.put("add", "000");
         opcodes.put("nand", "001");
         opcodes.put("lw", "010");
@@ -20,20 +19,20 @@ public class Assembler {
     }
 
     public static void main(String[] args) {
-        // Read the assembly code
-        List<String> assemblyCode = readAssemblyFile("src/combination.txt");
+        // อ่านโค้ด Assembly จากไฟล์ และเก็บแต่ละบรรทัดในรูปของ List<String>
+        List<String> assemblyCode = readAssemblyFile("src/assembly.txt");
 
-        // First pass to populate the symbol table
-        firstPass(assemblyCode);
+        // สร้าง symbol table ที่เก็บตำแหน่งของ labels
+        first(assemblyCode);
 
-        // Second pass to generate machine code and write it to a file
-        secondPass(assemblyCode);
+        // แปลง Assembly เป็น machine code และเขียนลงไฟล์
+        second(assemblyCode);
 
-        // Exit successfully if no errors
+        // ออกจากโปรแกรมเมื่อเสร็จการทำงาน
         System.exit(0);
     }
 
-    // Function to read the assembly file
+    // ฟังก์ชันในการอ่านไฟล์
     private static List<String> readAssemblyFile(String filename) {
         List<String> lines = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
@@ -56,8 +55,8 @@ public class Assembler {
         return lines;
     }
 
-    // First pass: Populate the symbol table and check for duplicate labels
-    private static void firstPass(List<String> assemblyCode) {
+    // First pass: เพื่อสร้าง symbol table ที่เก็บตำแหน่ง (address) ของทุกๆ label ที่ถูกใช้ในโปรแกรม และเช็ค labels ที่ซ้ำ
+    private static void first(List<String> assemblyCode) {
         currentAddress = 0;
         for (String line : assemblyCode) {
             String[] parts = line.split("\\s+");
@@ -80,8 +79,8 @@ public class Assembler {
         }
     }
 
-    // Second pass: Generate machine code and write to file
-    private static void secondPass(List<String> assemblyCode) {
+    // Second: Generate machine code and write to file
+    private static void second(List<String> assemblyCode) {
         currentAddress = 0;
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFileName))) {
@@ -97,6 +96,13 @@ public class Assembler {
                 if (parts.length == 0) continue;
 
                 String instruction = parts[0];
+
+                // Check if the instruction (opcode) is valid
+                if (!opcodes.containsKey(instruction) && !instruction.equals(".fill")) {
+                    System.err.println("Error: Invalid opcode: " + instruction);
+                    System.exit(1); // Exit with error code
+                }
+
                 int machineCode = 0;
 
                 try {
