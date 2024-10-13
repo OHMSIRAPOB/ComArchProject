@@ -112,17 +112,6 @@ public class BehavioralSimulator {
                     OType(state.mem[state.pc], arg); // no operation
                     break;
 
-                case 8: // div
-                    RType(state.mem[state.pc], arg); // R-Type
-                    regA = state.reg[arg[0]];
-                    regB = state.reg[arg[1]];
-                    if (regB != 0) {
-                        state.reg[arg[2]] = regA / regB; // divide arg[0] by arg[1], store in arg[2]
-                    } else {
-                        System.err.println("Error: Division by zero");
-                    }
-                    break;
-
             }
             state.pc++;
 
