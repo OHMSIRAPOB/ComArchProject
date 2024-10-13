@@ -17,13 +17,11 @@ public class Assembler {
         opcodes.put("jalr", "101");
         opcodes.put("halt", "110");
         opcodes.put("noop", "111");
-
-        opcodes.put("div","010");
     }
 
     public static void main(String[] args) {
         // Read the assembly code
-        List<String> assemblyCode = readAssemblyFile("src/assembly.txt");
+        List<String> assemblyCode = readAssemblyFile("src/div.txt");
 
         // First pass to populate the symbol table
         firstPass(assemblyCode);
@@ -169,13 +167,6 @@ public class Assembler {
                             case "halt":
                             case "noop":
                                 break;
-
-                            case "div":
-                               regA = Integer.parseInt(parts[1]);
-                               regB = Integer.parseInt(parts[2]);
-                               int divDestReg = Integer.parseInt(parts[3]);
-                               machineCode |= (regA << 19) | (regB << 16) | divDestReg;
-                               break;
 
                             default:
                                 System.err.println("Error: Invalid opcode: " + instruction);
