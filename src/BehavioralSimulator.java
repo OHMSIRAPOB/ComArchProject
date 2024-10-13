@@ -5,13 +5,13 @@ import java.io.IOException;
 public class BehavioralSimulator {
     private static final int NUMMEMORY = 65536; // maximum number ของ words ใน memory
     private static final int NUMREGS = 8; // จำนวน machine registers
-    private static final int MAXLINELENGTH = 1000; // for testing default is 1000
+    private static final int MAXLINELENGTH = 1000; // จำนวน machine registers
 
     public static class stateStruct {
         int pc; // program counter
         int[] mem = new int[NUMMEMORY];
         int[] reg = new int[NUMREGS];
-        int numMemory; // Tracks how many memory locations are in use
+        int numMemory; // นับจำนวน momory ที่ใช้อยู่
     }
 
     public static void printState(stateStruct state) {
@@ -26,6 +26,36 @@ public class BehavioralSimulator {
             System.out.println("\t\treg[ " + i + " ] " + state.reg[i]);
         }
         System.out.println("end state");
+    }
+
+    private static void RType(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
+        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
+        arg[2] = bit & 7; // destReg (Bits 0-2)
+    }
+
+    private static void IType(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
+        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
+        arg[2] = bit & 0xFFFF; // Offset (Bits 0-15)
+        arg[2] = convert(arg[2]); // Convert เป็น signed offset
+    }
+
+    private static void JType(int bit, int[] arg) {
+        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
+        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
+        arg[2] = bit & 0xFFFF; // destReg
+    }
+
+    private static void OType(int bit, int[] arg) {
+        arg[0] = bit & 0x3FFFFFF; // regA
+    }
+
+    public static int convert(int num) {
+        if ((num & (1 << 15)) != 0) {
+            num -= (1 << 16); // Converts เป็น signed number
+        }
+        return num;
     }
 
     public static void main(String[] args) {
@@ -122,35 +152,5 @@ public class BehavioralSimulator {
                 "total of " + total + " instructions executed\n" +
                 "final state of machine:");
         printState(state);
-    }
-
-    private static void RType(int bit, int[] arg) {
-        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
-        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 7; // destReg (Bits 0-2)
-    }
-
-    private static void IType(int bit, int[] arg) {
-        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
-        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 0xFFFF; // Offset (Bits 0-15)
-        arg[2] = convert(arg[2]); // Convert เป็น signed offset
-    }
-
-    private static void JType(int bit, int[] arg) {
-        arg[0] = (bit & (7 << 19)) >> 19; // regA (Bits 19-21)
-        arg[1] = (bit & (7 << 16)) >> 16; // regB (Bits 16-18)
-        arg[2] = bit & 0xFFFF; // destReg
-    }
-
-    private static void OType(int bit, int[] arg) {
-        arg[0] = bit & 0x3FFFFFF; // regA
-    }
-
-    public static int convert(int num) {
-        if ((num & (1 << 15)) != 0) {
-            num -= (1 << 16); // Converts เป็น signed number
-        }
-        return num;
     }
 }
