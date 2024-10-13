@@ -1,21 +1,23 @@
-lw 0 1 num
-lw 0 2 denom
-lw 0 3 count
-lw 0 4 sum
-lw 0 5 one
+lw 0 1 num          # โหลดค่าตัวแปร num ลงในรีจิสเตอร์ 1
+lw 0 2 denom        # โหลดค่าตัวแปร denom ลงในรีจิสเตอร์ 2
+lw 0 3 count        # โหลดค่าตัวแปร count ลงในรีจิสเตอร์ 3
+lw 0 4 sum          # โหลดค่าตัวแปร sum ลงในรีจิสเตอร์ 4
+lw 0 5 one          # โหลดค่า 1 ลงในรีจิสเตอร์ 5
 
-beq 2 0 done # กรณี ถ้าตัวหารเป็น 0
+beq 2 0 done        # หากตัวหาร (denom) เป็น 0 ให้กระโดดไปที่ done
+
 loop
-        add 2 4 4
-        add 5 3 3   #  จะเก็บผลลัพธ์ไว้ที่ reg 3
-        beq 4 1 done
-        beq 0 0 loop
+    div 1 2          # ทำการหาร num ด้วย denom
+    mflo 4           # นำผลหาร (LO) มาเก็บใน sum (รีจิสเตอร์ 4)
+    add 5 3 3        # เพิ่มค่า 1 ลงใน count
+    beq 3 2 done     # หาก count เท่ากับ denom (เป็นจำนวนรอบที่ต้องการหาร)
+    beq 0 0 loop     # กลับไปที่ loop
 
 done
-        halt    # สิ้นสุดโปรแกรม
+    halt              # สิ้นสุดโปรแกรม
 
-count . fill 0  # ตัวนับ
-sum .fill 0     # ผลลัพธ์รวม
-num .fill 100      # เลขตั้งต้น
-denom .fill 50   # เลขตัวหาร
-one .fill 1
+count .fill 0       # ตัวนับ
+sum .fill 0         # ผลลัพธ์รวม
+num .fill 100       # เลขตั้งต้น
+denom .fill 50      # เลขตัวหาร
+one .fill 1         # ค่า 1
