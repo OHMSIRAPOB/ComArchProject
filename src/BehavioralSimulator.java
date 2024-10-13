@@ -53,7 +53,11 @@ public class BehavioralSimulator {
         for (int i = 1; i != 0; i++) {
             total++;
             printState(state);
-            switch (state.mem[state.pc] >> 22) {  // แต่ละ instruction จะถูกแยกตามการเช็ค topmost bits
+
+            int instruction = state.mem[state.pc];
+            int opcode = instruction >> 22; // แต่ละ instruction จะถูกแยกตามการเช็ค topmost bits
+
+            switch (opcode) {
                 case 0: // add
                     rFormat(state.mem[state.pc], arg); // rFormat
                     regA = state.reg[arg[0]];
@@ -100,7 +104,7 @@ public class BehavioralSimulator {
 
                 case 6: // bhalt
                     oFormat(state.mem[state.pc], arg); // jFormat
-                    i = -1; // หยุด execution program
+                    i = -1; // หยุด execution program, หยุด loop
                     break;
 
                 case 7: // noop
@@ -111,7 +115,7 @@ public class BehavioralSimulator {
 
             if (total > MAXLINELENGTH) {
                 i = -1; // หยุด execution program
-                System.out.println("reached max length");
+                System.out.println("Max instruction limit reached");
             }
         }
         System.out.println("machine halted\n" +
