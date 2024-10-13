@@ -22,7 +22,7 @@ import java.util.*;
 
     public static void main(String[] args) {
         // อ่านโค้ด Assembly จากไฟล์ และเก็บแต่ละบรรทัดในรูปของ List<String>
-        List<String> assemblyCode = readAssemblyFile("src/combination.txt");
+        List<String> assemblyCode = readAssemblyFile("src/assembly.txt");
 
         // สร้าง symbol table ที่เก็บตำแหน่งของ labels
         first(assemblyCode);
@@ -109,7 +109,7 @@ import java.util.*;
                 try {
                     if (opcodes.containsKey(instruction)) {
                         int opcode = Integer.parseInt(opcodes.get(instruction), 2);
-                        machineCode = opcode << 22;
+                        machineCode = opcode << 22; // shift bit 22 ตน.
 
                         switch (instruction) {
                             case "add":
