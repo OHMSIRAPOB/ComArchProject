@@ -2,7 +2,9 @@ import java.io.*;
 import java.util.*;
 
     public class Assembler {
+        // เก็บคู่ข้อมูล opcodes ที่เกี่ยวข้อง
         private static final Map<String, String> opcodes = new HashMap<>();
+        // เก็บตำแหน่งของ labels ที่ถูกประกาศในโปรแกรม Assembly
         private static final Map<String, Integer> symbolTable = new HashMap<>();
         private static int currentAddress = 0;
     private static final String outputFileName = "src/machine_code.txt";
@@ -20,7 +22,7 @@ import java.util.*;
 
     public static void main(String[] args) {
         // อ่านโค้ด Assembly จากไฟล์ และเก็บแต่ละบรรทัดในรูปของ List<String>
-        List<String> assemblyCode = readAssemblyFile("src/assembly.txt");
+        List<String> assemblyCode = readAssemblyFile("src/combination.txt");
 
         // สร้าง symbol table ที่เก็บตำแหน่งของ labels
         first(assemblyCode);
@@ -34,15 +36,15 @@ import java.util.*;
 
     // ฟังก์ชันในการอ่านไฟล์
     private static List<String> readAssemblyFile(String filename) {
-        List<String> lines = new ArrayList<>();
+        List<String> lines = new ArrayList<>(); //สร้างลิสต์ lines ที่จะเก็บบรรทัดของโปรแกรม Assembly ที่ถูกอ่านจากไฟล์
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (!line.isEmpty() && !line.startsWith("#")) {
-                    // Remove comments
+                    // ลบ คอมเมนต์
                     int commentIndex = line.indexOf('#');
-                    if (commentIndex != -1) {
+                    if (commentIndex != -1) { //ถ้าค่าคอมเมนค์ไม่เท่ากับ -1 แปลว่ามีคอมเมนต์
                         line = line.substring(0, commentIndex).trim();
                     }
                     lines.add(line);
@@ -55,21 +57,21 @@ import java.util.*;
         return lines;
     }
 
-    // First pass: เพื่อสร้าง symbol table ที่เก็บตำแหน่ง (address) ของทุกๆ label ที่ถูกใช้ในโปรแกรม และเช็ค labels ที่ซ้ำ
+    // First: เพื่อสร้าง symbol table ที่เก็บตำแหน่ง (address) ของทุกๆ label ที่ถูกใช้ในโปรแกรม และเช็ค labels ที่ซ้ำ
     private static void first(List<String> assemblyCode) {
         currentAddress = 0;
         for (String line : assemblyCode) {
-            String[] parts = line.split("\\s+");
+            String[] parts = line.split("\\s+"); //แยกบรรทัดออกเป็นส่วนๆใช้ช่องว่างแบ่ง
 
-            // Check if the line starts with a label
+            // เช็คว่าเริ่มต้นด้วย label ไหม เช็คว่า เป็นคำสั่งassembly กับ .fillบ่
             if (!opcodes.containsKey(parts[0]) && !parts[0].equals(".fill")) {
                 String label = parts[0];
                 if (symbolTable.containsKey(label)) {
                     System.err.println("Error: Duplicate label found: " + label);
-                    System.exit(1);
+                    System.exit(1); //ดูว่าซ้ำบ่
                 }
                 symbolTable.put(label, currentAddress);  // Add label to symbol table
-                parts = Arrays.copyOfRange(parts, 1, parts.length);
+                parts = Arrays.copyOfRange(parts, 1, parts.length); //พบ label และบันทึกลงใน symbol table แล้ว โปรแกรมจะต้องลบ label ออกจากคำสั่ง เพื่อไม่ให้คำสั่งถัดไปได้รับผลกระทบ
             }
 
             // Skip empty lines after label removal
@@ -79,7 +81,7 @@ import java.util.*;
         }
     }
 
-    // Second: Generate machine code and write to file
+    // Second: แปลงคำสั่ง Assembly เป็น Machine Code
     private static void second(List<String> assemblyCode) {
         currentAddress = 0;
 
@@ -87,20 +89,20 @@ import java.util.*;
             for (String line : assemblyCode) {
                 String[] parts = line.split("\\s+");
 
-                // Skip label if present
+                // ข้ามถ้ามี label
                 if (!opcodes.containsKey(parts[0]) && !parts[0].equals(".fill")) {
                     parts = Arrays.copyOfRange(parts, 1, parts.length);
                 }
 
-                // Skip empty lines
+                // บรรทัดว่าง
                 if (parts.length == 0) continue;
 
                 String instruction = parts[0];
 
-                // Check if the instruction (opcode) is valid
+                // เช็ค opcode ถูกบ่
                 if (!opcodes.containsKey(instruction) && !instruction.equals(".fill")) {
                     System.err.println("Error: Invalid opcode: " + instruction);
-                    System.exit(1); // Exit with error code
+                    System.exit(1);
                 }
 
                 int machineCode = 0;
