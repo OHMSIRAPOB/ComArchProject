@@ -18,6 +18,6 @@ done
 
 fib0    .fill   0           # ค่าเริ่มต้น Fibonacci[0]
 fib1    .fill   1           # ค่าเริ่มต้น Fibonacci[1]
-count   .fill   3           # จำนวน Fibonacci ที่ต้องการคำนวณ (n)
+count   .fill   2           # จำนวน Fibonacci ที่ต้องการคำนวณ (n)
 one     .fill   -1          # ค่า -1 เพื่อใช้ในการลดค่าตัวนับ
 result  .fill   0           # ที่เก็บผลลัพธ์ Fibonacci สุดท้าย
