@@ -143,6 +143,7 @@ public class Assembler {
                                 machineCode |= (regA << 19) | (regB << 16) | (offsetField & 0xFFFF);
                                 break;
 
+                             // I-Type  ใช้สำหรับคำสั่งที่ต้องการคำนวณหรือโหลดค่าจากหน่วยความจำที่มีการใช้ immediate value
                             case "beq": // จะใช้ค่า offset คำนวณเป็นการข้ามบรรทัด (relative jump)
                                 regA = Integer.parseInt(parts[1]);
                                 regB = Integer.parseInt(parts[2]);
@@ -166,12 +167,14 @@ public class Assembler {
                                 machineCode |= (regA << 19) | (regB << 16) | (offset & 0xFFFF);
                                 break;
 
+                            // J-Type ใช้สำหรับคำสั่งที่เกี่ยวข้องกับการกระโดดไปยังตำแหน่งอื่นในโปรแกรม เช่นการกระโดดไปที่ Label หรือการเรียกฟังก์ชัน
                             case "jalr":  //จะใช้รีจิสเตอร์ regA และ regB โดยเก็บไว้ในบิตที่ 19-21 และ 16-18 ตามลำดับ
                                 regA = Integer.parseInt(parts[1]);
                                 regB = Integer.parseInt(parts[2]);
                                 machineCode |= (regA << 19) | (regB << 16);
                                 break;
 
+                            //O-Type มักจะใช้สำหรับคำสั่งที่ไม่ต้องการข้อมูลเพิ่มเติม เช่นคำสั่งที่หยุดโปรแกรม (halt) หรือไม่ทำอะไรเลย (noop)
                             case "halt":
                             case "noop":
                                 break;
@@ -180,16 +183,35 @@ public class Assembler {
                                 System.err.println("Error: Invalid opcode: " + instruction);
                                 System.exit(1);
                         }
-                    } else if (instruction.equals(".fill")) { // ใช้เพื่อกำหนดค่าโดยตรงลงในตำแหน่งหน่วยความจำ (ซึ่งอาจเป็นค่าตัวเลขหรือ label)
+                    } else if (instruction.equals(".fill")) { //กำหนดค่าโดยตรงลงในตำแหน่งหน่วยความจำ
                         int machineCodeValue = 0;
-                        if (isNumeric(parts[1])) {
-                            machineCodeValue = Integer.parseInt(parts[1]);
-                        } else if (symbolTable.containsKey(parts[1])) {
-                            machineCodeValue = symbolTable.get(parts[1]);
+
+                        // ตรวจสอบว่า parts มี 3 ส่วนหรือไม่ (หมายความว่ามี label นำหน้า)
+                        if (parts.length == 3) {
+                            // กรณีมี label: ใช้ parts[2] สำหรับค่าที่ต้องเติม
+                            if (isNumeric(parts[2])) { //ตรวจสอบว่าเป็นเลขหรือไม่
+                                machineCodeValue = Integer.parseInt(parts[2]); //ถ้าเป็นตัวเลข จะถูกแปลงเป็นค่า machineCodeValue ด้วย Integer.parseInt(parts[2])
+                            } else if (symbolTable.containsKey(parts[2])) { //ถ้าไม่ใช่ตัวเลข จะตรวจสอบว่ามี label นี้ใน symbolTable หรือไม่
+                                machineCodeValue = symbolTable.get(parts[2]);
+                            } else {
+                                System.err.println("Error: Undefined label in .fill: " + parts[2]);
+                                System.exit(1);
+                            }
+                        } else if (parts.length == 2) {
+                            // กรณีไม่มี label: ใช้ parts[1] สำหรับค่าที่ต้องเติม
+                            if (isNumeric(parts[1])) {
+                                machineCodeValue = Integer.parseInt(parts[1]);
+                            } else if (symbolTable.containsKey(parts[1])) {
+                                machineCodeValue = symbolTable.get(parts[1]);
+                            } else {
+                                System.err.println("Error: Undefined label in .fill: " + parts[1]);
+                                System.exit(1);
+                            }
                         } else {
-                            System.err.println("Error: Undefined label in .fill: " + parts[1]);
+                            System.err.println("Error: Invalid .fill syntax");
                             System.exit(1);
                         }
+
                         machineCode = machineCodeValue;
                     }
                     //หลังจากแปลงคำสั่งเป็น Machine Code แล้ว จะเขียนลงไฟล์และเพิ่มค่า currentAddress
