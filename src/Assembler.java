@@ -136,10 +136,10 @@ public class Assembler {
                                 machineCode |= (regA << 19) | (regB << 16) | (offsetField & 0xFFFF);
                                 break;
 
-                            case "beq":
+                            case "beq": // จะใช้ค่า offset คำนวณเป็นการข้ามบรรทัด (relative jump)
                                 regA = Integer.parseInt(parts[1]);
                                 regB = Integer.parseInt(parts[2]);
-                                int offset = 0;
+                                int offset = 0; //คำนวณค่า offset โดยใช้ตำแหน่งปัจจุบัน (current address) ลบด้วยตำแหน่งของ label
 
                                 if (isNumeric(parts[3])) {
                                     offset = Integer.parseInt(parts[3]);
@@ -158,7 +158,7 @@ public class Assembler {
                                 machineCode |= (regA << 19) | (regB << 16) | (offset & 0xFFFF);
                                 break;
 
-                            case "jalr":
+                            case "jalr":  //จะใช้รีจิสเตอร์ regA และ regB โดยเก็บไว้ในบิตที่ 19-21 และ 16-18 ตามลำดับ
                                 regA = Integer.parseInt(parts[1]);
                                 regB = Integer.parseInt(parts[2]);
                                 machineCode |= (regA << 19) | (regB << 16);
@@ -172,7 +172,7 @@ public class Assembler {
                                 System.err.println("Error: Invalid opcode: " + instruction);
                                 System.exit(1);
                         }
-                    } else if (instruction.equals(".fill")) {
+                    } else if (instruction.equals(".fill")) { // ใช้เพื่อกำหนดค่าโดยตรงลงในตำแหน่งหน่วยความจำ (ซึ่งอาจเป็นค่าตัวเลขหรือ label)
                         int machineCodeValue = 0;
                         if (isNumeric(parts[1])) {
                             machineCodeValue = Integer.parseInt(parts[1]);
@@ -184,7 +184,7 @@ public class Assembler {
                         }
                         machineCode = machineCodeValue;
                     }
-
+                    //หลังจากแปลงคำสั่งเป็น Machine Code แล้ว จะเขียนลงไฟล์และเพิ่มค่า currentAddress
                     writer.write(Integer.toString(machineCode));
                     writer.newLine();
                     currentAddress++;
@@ -200,6 +200,7 @@ public class Assembler {
         }
     }
 
+    //ตรวจสอบว่าข้อความที่ได้รับเป็นตัวเลขหรือไม่
     private static boolean isNumeric(String str) {
         return str.matches("-?\\d+");
     }
