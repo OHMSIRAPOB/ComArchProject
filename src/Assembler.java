@@ -147,21 +147,22 @@ public class Assembler {
                                 regA = Integer.parseInt(parts[1]);
                                 regB = Integer.parseInt(parts[2]);
                                 int offset = 0; //คำนวณค่า offset โดยใช้ตำแหน่งปัจจุบัน (current address) ลบด้วยตำแหน่งของ label
-
-                                if (isNumeric(parts[3])) {
+                                //ค่า offset คือการบอกโปรแกรมว่าให้กระโดดไปยังตำแหน่งที่ห่างจากตำแหน่งปัจจุบันมากน้อยแค่ไหน
+                                if (isNumeric(parts[3])) { //ถ้าเป็นตัวเลข จะตรวจสอบว่าเป็นตัวเลขจริงหรือไม่ จากนั้นแปลงเป็น offset ด้วย Integer.parseInt
                                     offset = Integer.parseInt(parts[3]);
-                                } else if (symbolTable.containsKey(parts[3])) {
+                                } else if (symbolTable.containsKey(parts[3])) { //ตรวจสอบว่า parts[3] เป็น label ที่มีการนิยามไว้ใน symbolTable หรือไม่
+                                                                                //ถ้าเป็น label โค้ดจะดึงตำแหน่งของ label นั้นจาก symbolTable แล้วคำนวณ offset โดยใช้สูตร
                                     offset = symbolTable.get(parts[3]) - (currentAddress + 1);
                                 } else {
                                     System.err.println("Error: Undefined label: " + parts[3]);
                                     System.exit(1);
                                 }
 
-                                if (offset < -32768 || offset > 32767) {
+                                if (offset < -32768 || offset > 32767) { //ค่าของ offset ต้องอยู่ในช่วงที่ตัวเลข 16 บิตสามารถเก็บได้ (-32768 ถึง 32767)
                                     System.err.println("Error: Offset out of range (-32768 to 32767): " + offset);
                                     System.exit(1);
                                 }
-
+                                //เลื่อนบิตเพื่อรวมค่าของ regA, regB, และ offset เข้ากับ machineCode
                                 machineCode |= (regA << 19) | (regB << 16) | (offset & 0xFFFF);
                                 break;
 
