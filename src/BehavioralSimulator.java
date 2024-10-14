@@ -5,7 +5,7 @@ import java.io.IOException;
 public class BehavioralSimulator {
     private static final int NUMMEMORY = 65536; // maximum number ของ words ใน memory
     private static final int NUMREGS = 8; // จำนวน machine registers
-    private static final int MAXLINELENGTH = 1000; // จำนวน machine registers
+    private static final int MAXLINELENGTH = 1000; // จำนวนคำสั่งสูงสุดที่สามารถทำงานได้
 
     public static class stateStruct {
         int pc; // program counter
